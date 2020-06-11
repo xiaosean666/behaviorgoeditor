@@ -25,7 +25,8 @@ b3e.project.TreeManager = function(editor, project) {
       var node = {
         name     : tree._id,
         title    : root.title,
-        category : 'tree', 
+        category : 'tree',
+        parent   : root._parent,
       };
       project.nodes.add(node, true);
 

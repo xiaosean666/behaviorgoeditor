@@ -5,17 +5,16 @@
   /**
    * A node specification.
    *
-   * @class Node
+   * @class Folder
    * @param {Boolean} isDefault Whether the node is provided by default or not.
    * @constructor
    */
-  b3e.Node = function(isDefault) {
+  b3e.Folder = function(isDefault) {
     this.spec = null;
-    this.name = null;
+    this.name = b3.createUUID();
     this.title = null;
     this.category = null;
     this.description = null;
-    this.properties = {};
     this.parent = null;
     this.isDefault = !!isDefault;
 
@@ -23,16 +22,14 @@
      * Copy this node.
      *
      * @method copy
-     * @returns {b3e.Node} A copy of this node
+     * @returns {b3e.Folder} A copy of this node
      */
     this.copy = function() {
-      var n         = new b3e.Node(this.isDefault);
+      var n         = new b3e.Folder(this.isDefault);
       n.spec        = this.spec;
       n.name        = this.name;
       n.title       = this.title;
       n.category    = this.category;
-      n.description = this.description;
-      n.properties  = this.properties;
       n.parent      = this.parent;
       
       return n;

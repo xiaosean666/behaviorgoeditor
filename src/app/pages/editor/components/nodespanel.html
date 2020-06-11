@@ -1,3 +1,9 @@
+ <style>
+     treecontrol li.c-li {padding: 0 0 0 5px;}
+     treecontrol.tree-dark li .tree-label.c-label {cursor: pointer;color: #ddd}
+     treecontrol.tree-dark li .tree-selected.c-labelSelected {color: #5bc0de;font-weight: inherit}
+ </style>
+
 <div ng-controller="NodespanelController as nodespanel" class="full-height side-panel">
 <!--   
   <nav class="panel-operations">
@@ -18,43 +24,131 @@
     </div>
     <div class="title">
       <a class="new btn btn-link btn-xs" 
-         style="display:none"
-         onmouseover="this.style.display='inline-block';"
-         onmouseout="this.style.display='none'"
-         ng-click="nodespanel.newTree();">New</a>
+         style="display:inline-block"
+         ui-sref="editor.editfolder">Folder</a>
 
-      <a onmouseover="this.parentElement.firstElementChild.style.display='inline-block';"
-         onmouseout="this.parentElement.firstElementChild.style.display='none';">
-         Trees
+      <a class="new btn btn-link btn-xs" 
+        style="display:inline-block"
+        ui-sref="editor.editnode">Node</a>
+
+      <a class="new btn btn-link btn-xs"
+         style="display:inline-block"
+         ng-click="nodespanel.newTree();">Tree</a>
       </a>
+      <a style="display:inline-block">Edit</a>
     </div>
 
-    <div class="node-list-content">
+    <!-- as a Dom element -->
+    <div class="node-list-content" ng-cloak>
+      <div ng-repeat="(category, treeData) in nodespanel.dataForTree" class="node-list-category" 
+        data-type="folder" data-category="{{category}}"
+        b3-drop-node="true" ng-cloak>
+        <div ng-click="" class="node-list-title" ng-cloak>{{category}}s</div>
+        <treecontrol class="tree-dark"
+          tree-model="treeData"
+          options="nodespanel.treeOptions"
+          on-selection="nodespanel.select(node.name)"
+          selected-node="nodespanel.selectedNode"
+          expanded-nodes="nodespanel.expandedNodes"
+          ng-cloak>
+          <span ng-switch="" on="node.type">
+            <span ng-switch-when="folder" class="glyphicon glyphicon-folder-open" aria-hidden="true" style="margin-right: 5px;"></span>
+          </span>
+          <div style="display: inline-block" 
+            ng-cloak b3-drag-node
+            b3-drop-node="true" 
+            data-type="{{node.type}}" 
+            data-name="{{node.name}}" 
+            data-category="{{node.category}}" 
+            data-path="{{node.parentPath}}"
+            data-default="{{node.isDefault}}">
+            <!-- <a ng-bind="node.title" ng-cloak>></a> -->
+
+            <!-- tree control -->
+            <a class="remove btn btn-link btn-xs" 
+               ng-if="node.type == 'tree'"
+               ng-cloak
+               ng-click="nodespanel.remove(node.name)">Remove</a>
+
+            <!-- end tree control -->
+            <!-- node control -->
+            <a class="edit btn btn-link btn-xs"
+               ng-if="node.type == 'node' && !node.isDefault"
+               ng-cloak
+               ui-sref="editor.editnode({name:node.name})">Edit</a>
+            <!-- end node control -->
+            <!-- folder control -->
+            <a class="edit btn btn-link btn-xs" 
+               ng-if="node.type == 'folder'"
+               ng-cloak
+               ui-sref="editor.editfolder({name:node.name})">Edit</a>
+            <!-- end folder control -->
+            <span ng-cloak ng-bind="node.title"></span>
+
+          </div>
+
+        </treecontrol>
+
+        <ul class="empty" ng-hide="treeData.length">
+          <li>empty</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- <div class="node-list-content">
       <div class="node-list-category">
-        <!-- <div ng-click="" class="node-list-title">trees</div> -->
         <ul>
           <li ng-repeat="tree in nodespanel.trees">
             <a class="remove btn btn-link btn-xs" 
                style="display:none"
                onmouseover="this.style.display='inline-block';"
                onmouseout="this.style.display='none'"
-               ng-click="nodespanel.remove(tree.id)">Remove</a>
+               ng-click="nodespanel.remove(tree.name)">Remove</a>
 
             <a onmouseover="this.parentElement.firstElementChild.style.display='inline-block';"
                onmouseout="this.parentElement.firstElementChild.style.display='none';"
-               data-name="{{tree.id}}"
+               data-name="{{tree.name}}"
                ng-class="{active:tree.active}" 
-               ng-click="nodespanel.select(tree.id)"
-               ng-bind="tree.name"
+               ng-click="nodespanel.select(tree.name)"
+               ng-bind="tree.title"
                ng-cloak
-               b3-drag-node>
+               b3-drag-node="tree">
             </a>
           </li>
         </ul>
       </div>
-    </div>
+    </div> -->
 
-    <div class="title">
+<!--     <div class="node-list-content">
+        <div ng-repeat="(category, folders) in nodespanel.folders" class="node-list-category">
+          <div ng-click="" class="node-list-title" ng-cloak>{{category}}s</div>
+          <ul>
+            <li ng-repeat="folder in folders">
+              <a class="edit btn btn-link btn-xs" 
+                 style="display:none"
+                 onmouseover="this.style.display='inline-block';"
+                 onmouseout="this.style.display='none'"
+                 ng-hide="folder.isDefault"
+                 ng-cloak
+                 ui-sref="editor.editfolder({name:folder.name})">Edit</a>
+
+              <a class="no-select"
+                 data-name="{{folder.name}}"
+                 onmouseover="this.parentElement.firstElementChild.style.display='inline-block';"
+                 onmouseout="this.parentElement.firstElementChild.style.display='none';"
+                 ng-bind="folder.title"
+                 ng-cloak>
+
+              </a>
+            </li>
+          </ul>
+          <ul class="empty" ng-hide="folders.length">
+            <li>empty</li>
+          </ul>
+        </div>
+    </div> -->
+
+<!--     <div class="title">
       <a class="new btn btn-link btn-xs" 
          style="display:none"
          onmouseover="this.style.display='inline-block';"
@@ -65,9 +159,9 @@
          onmouseout="this.parentElement.firstElementChild.style.display='none';">
          Nodes
       </a>
-    </div>
+    </div> -->
 
-    <div class="node-list-content">
+<!--     <div class="node-list-content">
       <div ng-repeat="(category, nodes) in nodespanel.nodes" class="node-list-category">
         <div ng-click="" class="node-list-title" ng-cloak>{{category}}s</div>
         <ul>
@@ -95,8 +189,7 @@
           <li>empty</li>
         </ul>
       </div>
-      
-    </div>
+    </div> -->
   </div>
   
 </div>

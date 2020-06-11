@@ -112,7 +112,7 @@
     var canvas = document.createElement('canvas');
 
     var p = this.project.get();
-    var node = p.nodes.get(name);
+    var node = p.nodes.get(name) || p.folders.get(name);
     var tree = p.trees.getSelected();
 
     if (!node) return;

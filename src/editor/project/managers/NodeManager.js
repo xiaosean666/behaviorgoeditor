@@ -22,6 +22,7 @@ b3e.project.NodeManager = function(editor, project) {
       n.title       = node.title;
       n.description = node.description;
       n.properties  = tine.merge({}, node.properties||node.parameters);
+      n.parent      = node.parent;
 
       node = n;
     }
@@ -62,6 +63,7 @@ b3e.project.NodeManager = function(editor, project) {
       description : node.description,
       category    : node.category,
       properties  : node.properties,
+      parent      : node.parent,
     };
 
     if (typeof template.name !== 'undefined') {
@@ -79,6 +81,9 @@ b3e.project.NodeManager = function(editor, project) {
     if (typeof template.properties !== 'undefined') {
       node.properties  = tine.merge({}, template.properties);
     }
+    if (typeof template.parent !== 'undefined') {
+      node.parent  = template.parent;
+    }
 
     var _newValues = {
       name        : node.name,
@@ -86,6 +91,7 @@ b3e.project.NodeManager = function(editor, project) {
       description : node.description,
       category    : node.category,
       properties  : node.properties,
+      parent      : node.parent,
     };
 
     project.history._beginBatch();
@@ -106,9 +112,10 @@ b3e.project.NodeManager = function(editor, project) {
     project.history._add(new b3e.Command(_old, _new));
     project.history._endBatch();
 
-    editor.trigger('nodechanged', node);
     if (node.category == 'tree') {
       editor.trigger('treenodechanged', node);
+    }else{
+      editor.trigger('nodechanged', node);
     }
   };
 

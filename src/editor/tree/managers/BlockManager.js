@@ -103,6 +103,7 @@ b3e.tree.BlockManager = function(editor, project, tree) {
       title       : block.title,
       description : block.description,
       properties  : block.properties,
+      _parent     : block._parent,
     };
 
     template = template || {};
@@ -127,6 +128,11 @@ b3e.tree.BlockManager = function(editor, project, tree) {
     } else {
       block.properties = tine.merge({}, node.properties, block.properties);
     }
+    if (typeof template.parent !== 'undefined') {
+      block._parent = template.parent;
+    } else {
+      block._parent = node._parent || block._parent;
+    }
     block._redraw();
 
     var _newValues = {
@@ -134,6 +140,7 @@ b3e.tree.BlockManager = function(editor, project, tree) {
       title       : block.title,
       description : block.description,
       properties  : block.properties,
+      _parent     : block._parent,
     };
 
     // redraw connections linked to the entity
@@ -149,7 +156,7 @@ b3e.tree.BlockManager = function(editor, project, tree) {
     project.history._beginBatch();
 
     if (block.category === 'root') {
-      project.nodes.update(tree._id, {title: block.title||'A behavior tree'});
+      project.nodes.update(tree._id, {title: block.title||'A behavior tree', parent: block._parent||null});
     }
 
     var _old = [this, this.update, [block, _oldValues]];

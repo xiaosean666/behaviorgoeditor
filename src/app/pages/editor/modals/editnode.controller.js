@@ -24,6 +24,7 @@
     vm.action = 'New';
     vm.node = null;
     vm.blacklist = null;
+    vm.folderList = null;
     vm.original = null;
     vm.save = save;
     vm.remove = remove;
@@ -50,13 +51,32 @@
         }
       });
       vm.blacklist = blacklist.join(',');
+
+      var folderList = [];
+      p.folders.each(function(folder) {
+        if (vm.original != null && folder.category == vm.node.category) {
+          folderList.push(folder);
+        }
+      });
+      vm.folderList = folderList;
     }
 
     function save() {
       var p = $window.editor.project.get();
 
       if (vm.original) {
-        p.nodes.update(vm.original, vm.node);  
+        if (vm.original.category == 'tree') {
+            var t = p.trees.get(vm.original.name);
+            var block = {
+              title       : vm.node.title,
+              description : vm.node.description,
+              properties  : tine.merge({}, vm.node.properties),
+              parent      : vm.node.parent,
+            };
+            t.blocks.update(t.blocks.getRoot(), block);
+        } else {
+          p.nodes.update(vm.original, vm.node);
+        }
       } else {
         p.nodes.add(vm.node);
       }

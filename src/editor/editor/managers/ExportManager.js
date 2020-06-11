@@ -34,7 +34,8 @@ b3e.editor.ExportManager = function(editor) {
       scope        : 'project',
       selectedTree : (tree?tree._id:null),
       trees        : [],
-      custom_nodes : this.nodesToData()
+      custom_nodes : this.nodesToData(),
+      custom_folders : this.foldersToData(),
     };
 
     project.trees.each(function(tree) {
@@ -67,6 +68,7 @@ b3e.editor.ExportManager = function(editor) {
       description  : root.description,
       root         : first[0] || null,
       properties   : root.properties,
+      parent       : root._parent,
       nodes        : {},
       display     : {
         camera_x : tree.x,
@@ -79,6 +81,7 @@ b3e.editor.ExportManager = function(editor) {
 
     if (!ignoreNodes) {
       data.custom_nodes = this.nodesToData();
+      data.custom_folders = this.foldersToData();
     }
 
     tree.blocks.each(function(block) {
@@ -122,6 +125,29 @@ b3e.editor.ExportManager = function(editor) {
           title       : node.title,
           description : node.description,
           properties  : node.properties,
+          parent      : node.parent,
+        });
+      }
+    });
+
+    return data;
+  };
+
+  this.foldersToData = function() {
+    var project = editor.project.get();
+    if (!project) return;
+
+    var data = [];
+    project.folders.each(function(folder) {
+      if (!folder.isDefault) {
+        data.push({
+          version     : b3e.VERSION,
+          scope       : 'folder',
+          name        : folder.name,
+          category    : folder.category,
+          title       : folder.title,
+          description : folder.description,
+          parent      : folder.parent,
         });
       }
     });

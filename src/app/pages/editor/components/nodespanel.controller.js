@@ -21,13 +21,34 @@
     var vm = this;
     vm.nodes = null;
     vm.newTree = newTree;
+    vm.newFolder = newFolder;
     vm.select  = select;
     vm.remove  = remove;
     vm.search  = search;
     vm.filter  = "";
 
+    vm.treeOptions = {
+       nodeChildren: "children",
+       dirSelectable: false,
+       allowDeselect: false,
+       isSelectable: function(node) {
+         return node.type == 'tree';
+       },
+       injectClasses: {
+         "li": "c-li",
+         "label": "c-label",
+         "labelSelected": "c-labelSelected"
+       },
+    };
+    vm.selectedNode = null;
+    vm.expandedNodes = [];
+    vm.parentPath = [];
+    vm.parentNode = [];
+    vm.tempExpand = [];
+
     _create();
     _activate();
+    vm.expandedNodes = vm.tempExpand;
     $scope.$on('$destroy', _destroy);
 
     // BODY //
@@ -40,17 +61,31 @@
         condition : [],
       };
 
+      vm.folders = {
+        tree      : [],
+        composite : [],
+        decorator : [],
+        action    : [],
+        condition : [],
+      };
+
       var p = $window.editor.project.get();
       var selected = p.trees.getSelected();
       p.trees.each(function(tree) {
         var root = tree.blocks.getRoot();
         if (_serachFilter(root)) return;
-        vm.trees.push({
-          'id'       : tree._id,
-          'name'     : root.title || 'A behavior tree',
-          'active'   : tree===selected,
-          'index'    : vm.trees.length,
+        var index = vm.trees.push({
+          name       : tree._id,
+          title     : root.title || 'A behavior tree',
+          active   : tree===selected,
+          category : 'tree',
+          parent   : root._parent,
+          type     : 'tree',
+          index    : vm.trees.length,
         });
+        if (vm.trees[index - 1].active) {
+          vm.selectedNode = vm.trees[index - 1];
+        }
       });
       vm.trees.sort(function(a, b)
       {
@@ -65,25 +100,113 @@
         list.push({
           name: node.name,
           title: _getTitle(node),
+          category : node.category,
+          parent   : node.parent,
+          type     : 'node',
+          index    : list.length,
           isDefault: node.isDefault,
-          index: list.length,
         });
       });
-      for(var key in vm.nodes){
-        vm.nodes[key].sort(function(a, b)
+
+      p.folders.each(function(folder) {
+        if (_serachFilter(folder)) return;
+
+        var list = vm.folders[folder.category];
+        if (!list) return;
+        list.push({
+          name: folder.name,
+          title: _getTitle(folder),
+          category : folder.category,
+          parent   : folder.parent,
+          type     : 'folder',
+          index: list.length,
+          isDefault: folder.isDefault,
+        });
+      });
+
+      var tempDataTree = {
+        tree      : [],
+        composite : [],
+        decorator : [],
+        action    : [],
+        condition : [],
+      };
+
+      vm.dataForTree = {
+        tree      : [],
+        composite : [],
+        decorator : [],
+        action    : [],
+        condition : [],
+      };
+
+      for(var key in vm.folders){
+        var list = tempDataTree[key];
+        if (key == 'tree') {
+          list = list.concat(vm.trees, vm.folders[key]);
+        } else {
+          list = list.concat(vm.nodes[key], vm.folders[key]);
+        }
+        tempDataTree[key] = list;
+      }
+
+      for(var dataKey in tempDataTree){
+        var dataValue = tempDataTree[dataKey];
+        dataValue.sort(function(a, b)
         {
           if (a.isDefault == true && b.isDefault == true) {
             return a.index - b.index;
-          }
-          if (a.isDefault) {
+          }else if (a.isDefault) {
             return -1;
-          }
-          if (b.isDefault) {
+          }else if (b.isDefault) {
             return 1;
+          }else{
+            if (a.type == 'folder' && b.type == 'folder') {
+              if (_checkIsNullOrUndefined(a.parent) && _checkIsNullOrUndefined(b.parent)) {
+                // return a.index - b.index;
+              }else if (_checkIsNullOrUndefined(a.parent)) {
+                return -1;
+              }else if (_checkIsNullOrUndefined(b.parent)) {
+                return 1;
+              } else {
+                if (b.parent == a.name) {
+                  return -1;
+                } else if (a.parent == b.name) {
+                  return 1;
+                }
+                // return a.index - b.index;
+              }
+            }else if (a.type == 'folder') {
+              return -1;
+            }else if (b.type == 'folder') {
+              return 1;
+            }
           }
-          return a.title.toLowerCase().charCodeAt(0) - b.title.toLowerCase().charCodeAt(0);
+          return a.title.localeCompare(b.title,'zh-CN');
+        });
+        var dataList = vm.dataForTree[dataKey];
+        var expandedNodes = [];
+        dataValue.forEach(function(value) {
+          if (_checkIsNullOrUndefined(value.parent)) {
+            dataList.push(value);
+          } else {
+            vm.tempSearchData = null;
+            var nodeData = _serachTarget(dataList, value.parent);
+            if (nodeData != null) {
+              nodeData.children = nodeData.children || [];
+              nodeData.children.push(value);
+            }else{
+              dataList.push(value);
+            }
+          }
+        });
+        dataList.forEach(function(value) {
+          vm.parentPath = [];
+          vm.parentNode = [];
+          _setParentPath(value);
         });
       }
+      tempDataTree = [];
     }
 
     function _event(e) {
@@ -92,24 +215,34 @@
 
     function _create() {
       $window.editor.on('treenodechanged', _event);
+      $window.editor.on('nodechanged', _event);
       $window.editor.on('noderemoved', _event);
       $window.editor.on('nodeadded', _event);
       $window.editor.on('treeadded', _event);
       // $window.editor.on('blockchanged', _event);
-      $window.editor.on('treeselected', _event);
+      // $window.editor.on('treeselected', _event);
       $window.editor.on('treeremoved', _event);
       $window.editor.on('treeimported', _event);
+
+      $window.editor.on('folderremoved', _event);
+      $window.editor.on('folderadded', _event);
+      $window.editor.on('folderchanged', _event);
     }
 
     function _destroy() {
       $window.editor.off('treenodechanged', _event);
+      $window.editor.off('nodechanged', _event);
       $window.editor.off('noderemoved', _event);
       $window.editor.off('nodeadded', _event);
       $window.editor.off('treeadded', _event);
       // $window.editor.off('blockchanged', _event);
-      $window.editor.off('treeselected', _event);
+      // $window.editor.off('treeselected', _event);
       $window.editor.off('treeremoved', _event);
       $window.editor.off('treeimported', _event);
+
+      $window.editor.off('folderremoved', _event);
+      $window.editor.off('folderadded', _event);
+      $window.editor.off('folderchanged', _event);
     }
 
     function _getTitle(node) {
@@ -121,6 +254,11 @@
     function newTree() {
       var p = $window.editor.project.get();
       p.trees.add();
+    }
+
+    function newFolder(category) {
+      var p = $window.editor.project.get();
+      p.folders.add(category);
     }
 
     function select(id) {
@@ -156,5 +294,45 @@
       }
       return true;
     }
-  }
+
+    function _checkIsNullOrUndefined(a) {
+      return a == '' || (!a && typeof(a)!='undefined' && a!=0) || typeof(a) === 'undefined';
+    }
+
+    function _serachTarget(serachData, parent) {
+      for(var i = 0,len=serachData.length; i < len; i++) {
+        var serachDataValue = serachData[i];
+
+        if (serachDataValue.name == parent) {
+          vm.tempSearchData = serachDataValue;
+          break;
+        } else if (serachDataValue.type == 'folder' &&
+         !_checkIsNullOrUndefined(serachDataValue.children)){
+          vm.tempSearchData = null;
+          vm.tempSearchData = _serachTarget(serachDataValue.children, parent);
+          if (vm.tempSearchData != null) {
+            break;
+          }
+        }
+      }
+      return vm.tempSearchData;
+    }
+
+    function _setParentPath(data) {
+      if (vm.tempExpand.length == 0 &&
+          vm.selectedNode.name == data.name) {
+          vm.parentNode.forEach(function(value) {
+            vm.tempExpand.push(value);
+          });
+      }
+      if (data.children != null) {
+        vm.parentPath.push(data.name);
+        vm.parentNode.push(data);
+        data.children.forEach(function(value) {
+          value.parentPath = vm.parentPath.join(',');
+          _setParentPath(value);
+        });
+      }
+    }
+
 })();

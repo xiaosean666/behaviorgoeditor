@@ -45,6 +45,12 @@ angular.module('app')
         controller: 'EditNodeController',
         controllerAs: 'editnode',
       })
+      .state('editor.editfolder', {
+        url: "/folder/:name",
+        templateUrl: 'pages/editor/modals/editfolder.html',
+        controller: 'EditFolderController',
+        controllerAs: 'editfolder',
+      })
       .state('editor.export', {
         url: "/export/:type/:format",
         templateUrl: 'pages/editor/modals/export.html',

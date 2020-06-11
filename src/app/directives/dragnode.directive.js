@@ -38,6 +38,9 @@
         }
 
         e.dataTransfer.setData('name', attrs.name);
+        e.dataTransfer.setData('type', attrs.type);
+        e.dataTransfer.setData('category', attrs.category);
+        e.dataTransfer.setData('default', attrs.default);
         e.dataTransfer.setDragImage(canvas, canvas.width/2, canvas.height/2);
       });
     }

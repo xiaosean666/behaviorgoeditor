@@ -2,7 +2,8 @@ angular.module('app', [
   'ui.router',
   'ui.bootstrap',
   'ngAnimate',
-  'templates'
+  'templates',
+  'treeControl',
 ])
 
 .run(['$rootScope', '$window', '$state',

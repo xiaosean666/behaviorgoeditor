@@ -34,14 +34,21 @@ var vendor_js = [
   'bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js',
   'bower_components/angular-ui-router/release/angular-ui-router.min.js',
   'bower_components/sweetalert/dist/sweetalert.min.js',
+  'bower_components/angular-tree-control/angular-tree-control.js',
 ];
 var vendor_css = [
   'bower_components/bootstrap/dist/css/bootstrap.min.css',
   'bower_components/sweetalert/dist/sweetalert.css',
+  'bower_components/angular-tree-control/css/tree-control.css',
+  'bower_components/angular-tree-control/css/tree-control-attribute.css',
 ];
 var vendor_fonts = [
   'bower_components/fontawesome/fonts/*',
   'src/assets/fonts/**/*',
+  'bower_components/angular-tree-control/fonts/*',
+];
+var vendor_images = [
+  'bower_components/angular-tree-control/images/*',
 ];
 
 var preload_js = [
@@ -98,8 +105,12 @@ gulp.task('_vendor_fonts', function() {
              .pipe(gulp.dest('build/fonts'))
 });
 
-gulp.task('_vendor', ['_vendor_js', '_vendor_css', '_vendor_fonts']);
+gulp.task('_vendor_images', function() {
+  return gulp.src(vendor_images)
+             .pipe(gulp.dest('build/images'))
+});
 
+gulp.task('_vendor', ['_vendor_js', '_vendor_css', '_vendor_fonts', '_vendor_images']);
 
 // TASKS (PRELOAD) ============================================================
 gulp.task('_preload_js', function() {
