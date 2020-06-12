@@ -152,41 +152,11 @@
 
       for(var dataKey in tempDataTree){
         var dataValue = tempDataTree[dataKey];
-        dataValue.sort(function(a, b)
-        {
-          if (a.isDefault == true && b.isDefault == true) {
-            return a.index - b.index;
-          }else if (a.isDefault) {
-            return -1;
-          }else if (b.isDefault) {
-            return 1;
-          }else{
-            if (a.type == 'folder' && b.type == 'folder') {
-              if (_checkIsNullOrUndefined(a.parent) && _checkIsNullOrUndefined(b.parent)) {
-                // return a.index - b.index;
-              }else if (_checkIsNullOrUndefined(a.parent)) {
-                return -1;
-              }else if (_checkIsNullOrUndefined(b.parent)) {
-                return 1;
-              } else {
-                if (b.parent == a.name) {
-                  return -1;
-                } else if (a.parent == b.name) {
-                  return 1;
-                }
-                // return a.index - b.index;
-              }
-            }else if (a.type == 'folder') {
-              return -1;
-            }else if (b.type == 'folder') {
-              return 1;
-            }
-          }
-          return a.title.localeCompare(b.title,'zh-CN');
-        });
+        dataValue.sort(_sortDataValue);
         var dataList = vm.dataForTree[dataKey];
         var expandedNodes = [];
-        dataValue.forEach(function(value) {
+        for(var i = 0; i < dataValue.length; i++) {
+          var value = dataValue[i];
           if (_checkIsNullOrUndefined(value.parent)) {
             dataList.push(value);
           } else {
@@ -199,12 +169,12 @@
               dataList.push(value);
             }
           }
-        });
-        dataList.forEach(function(value) {
+        }
+        for(var j = 0; j < dataList.length; j++) {
           vm.parentPath = [];
           vm.parentNode = [];
-          _setParentPath(value);
-        });
+          _setParentPath(dataList[j]);
+        }
       }
       tempDataTree = [];
     }
@@ -318,16 +288,47 @@
       return vm.tempSearchData;
     }
 
-    function _setParentPath(data) {
-      if (vm.tempExpand.length == 0 &&
-          vm.selectedNode.name == data.name) {
-          vm.parentNode.forEach(function(value) {
-            vm.tempExpand.push(value);
-          });
+    function _sortDataValue(a, b) {
+      if (a.isDefault == true && b.isDefault == true) {
+        return a.index - b.index;
+      }else if (a.isDefault) {
+        return -1;
+      }else if (b.isDefault) {
+        return 1;
+      }else{
+        if (a.type == 'folder' && b.type == 'folder') {
+          if (_checkIsNullOrUndefined(a.parent) && _checkIsNullOrUndefined(b.parent)) {
+            // return a.index - b.index;
+          }else if (_checkIsNullOrUndefined(a.parent)) {
+            return -1;
+          }else if (_checkIsNullOrUndefined(b.parent)) {
+            return 1;
+          } else {
+            if (b.parent == a.name) {
+              return -1;
+            } else if (a.parent == b.name) {
+              return 1;
+            }
+            // return a.index - b.index;
+          }
+        }else if (a.type == 'folder') {
+          return -1;
+        }else if (b.type == 'folder') {
+          return 1;
+        }
       }
+      return a.title.localeCompare(b.title,'zh-CN');
+    }
+
+    function _setParentPath(data) {
       if (data.children != null) {
         vm.parentPath.push(data.name);
         vm.parentNode.push(data);
+        if (vm.tempExpand.length == 0 && vm.selectedNode.parent == data.name) {
+            vm.parentNode.forEach(function(value) {
+              vm.tempExpand.push(value);
+            });
+        }
         data.children.forEach(function(value) {
           value.parentPath = vm.parentPath.join(',');
           _setParentPath(value);

@@ -54,7 +54,8 @@
               block.parent = attrs.name || null;
               p.nodes.update(node, block);
             } else if (type == 'folder') {
-              if (attrs.path != null && attrs.path.indexOf(name) != -1) return false;
+              var sourcePath = e.dataTransfer.getData('path');
+              if (attrs.name != null && sourcePath.indexOf(attrs.name) != -1) return false;
               var folder = p.folders.get(name);
               block = folder.copy();
               block.parent = attrs.name || null;
