@@ -68,7 +68,10 @@
     }
 
     function remove(i) {
-      vm.rows.splice(i, 1);
+      var data = vm.rows.splice(i, 1);
+      if (typeof(data) != 'undefined' && data.length > 0) {
+        delete vm.model[data[0].key];
+      }
     }
 
     function change() {
