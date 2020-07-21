@@ -155,6 +155,7 @@
         dataValue.sort(_sortDataValue);
         var dataList = vm.dataForTree[dataKey];
         var expandedNodes = [];
+        var extraData = [];
         for(var i = 0; i < dataValue.length; i++) {
           var value = dataValue[i];
           if (_checkIsNullOrUndefined(value.parent)) {
@@ -165,11 +166,13 @@
             if (nodeData != null) {
               nodeData.children = nodeData.children || [];
               nodeData.children.push(value);
+              _searchParent(value, extraData);
             }else{
-              dataList.push(value);
+              extraData.push(value);
             }
           }
         }
+        _combineData(extraData, dataList);
         for(var j = 0; j < dataList.length; j++) {
           vm.parentPath = [];
           vm.parentNode = [];
@@ -286,6 +289,34 @@
         }
       }
       return vm.tempSearchData;
+    }
+
+    function _searchParent(parent, extraData) {
+      for(var index = extraData.length -1; index >= 0; index--){
+        var item = extraData[index];
+        if (parent.name == item.parent) {
+          parent.children = parent.children || [];
+          parent.children.push(item);
+          extraData.splice(index, 1);
+        }
+      }
+    }
+
+    function _combineData(extraData, dataList) {
+      extraData.forEach(function(item) {
+        if (item.type == 'folder'){
+          dataList.push(item);
+        } else {
+          vm.tempSearchData = null;
+          var nodeData = _serachTarget(dataList, item.parent);
+          if (nodeData != null) {
+            nodeData.children = nodeData.children || [];
+            nodeData.children.push(item);
+          }else{
+            dataList.push(item);
+          }
+        }
+      });
     }
 
     function _sortDataValue(a, b) {
